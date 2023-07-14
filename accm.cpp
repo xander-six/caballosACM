@@ -115,186 +115,7 @@ Caballo agregar_ejemplar(){
 
 
 
-std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos){
-    std::vector<Caballo> caballos = original_caballos;
-    
-    // Mostrar la lista de caballos con sus posiciones
-    std::cout << "Caballos registrados:" << std::endl;
-    for (int i = 0; i < caballos.size(); ++i) {
-        std::cout << i << ". " << caballos[i].nombre << std::endl;
-    }
 
-    
-    int posicionCaballo;
-    std::cout << "Ingrese la posiciOn del caballo a asignarle padre o madre: ";
-    std::cin >> posicionCaballo;
-    std::cin.ignore();
-
-    if (posicionCaballo >= 0 && posicionCaballo < caballos.size()) {
-        std::cout << u8"Usted seleccionó al caballo " << caballos[posicionCaballo].nombre << std::endl;
-        std::cout << "1. Asignar madre\n2. Asignar padre: ";
-        int opcion;
-        std::cin >> opcion;
-        while (opcion != 1 && opcion != 2) {
-            std::cout << u8"Opción inválida. Por favor, seleccione nuevamente: ";
-            std::cin >> opcion;
-        }
-
-        if (opcion == 1) {
-            std::cout << "La madre ya se encuentra registrada? (s/n): ";
-            std::string respuesta;
-            std::cin >> respuesta;
-            std::cin.ignore();
-
-            if (respuesta == "s") {
-                //Muestra todas las yeguas registradas
-                int posicionMadre;
-                std::cout << "Lista de yeguas:" << std::endl;
-                for (int i = 0; i < caballos.size(); ++i) {
-                    if (caballos[i].sexo == "F") {
-                        std::cout << i << ". " << caballos[i].nombre << std::endl;
-                    }
-                }
-
-                std::cout << u8"Indique el número de la madre: ";
-                std::cin >> posicionMadre;
-                std::cin.ignore();
-
-                if (posicionMadre >= 0 && posicionMadre < caballos.size()) {
-                    // Comparar ascendencia genealógica
-                    Caballo madre = caballos[posicionMadre];
-                    Caballo* padre = caballos[posicionCaballo].padre;
-
-                    bool existeCoincidencia = false;
-               
-                    if (padre != nullptr) {     //Si el padre está asignado
-                        Caballo* abueloPaterno = padre->padre;
-                        Caballo* abuelaPaterna = padre->madre;
-
-                        //Compara la ascendencia genética
-                        if (abueloPaterno != nullptr) {
-                            Caballo* bisabueloPaterno = abueloPaterno->padre;
-                            Caballo* bisabuelaPaterna = abueloPaterno->madre;
-
-                            if (bisabueloPaterno != nullptr && bisabueloPaterno == madre.padre) {
-                                existeCoincidencia = true;
-                            }
-                            if (bisabuelaPaterna != nullptr && bisabuelaPaterna == madre.madre) {
-                                existeCoincidencia = true;
-                            }
-                        }
-
-                        if (abuelaPaterna != nullptr) {
-                            Caballo* bisabueloMaterno = abuelaPaterna->padre;
-                            Caballo* bisabuelaMaterna = abuelaPaterna->madre;
-
-                            if (bisabueloMaterno != nullptr && bisabueloMaterno == madre.padre) {
-                                existeCoincidencia = true;
-                            }
-                            if (bisabuelaMaterna != nullptr && bisabuelaMaterna == madre.madre) {
-                                existeCoincidencia = true;
-                            }
-                        }
-                    }
-
-                    if (existeCoincidencia) {
-                        std::cout << u8"Error: La ascendencia genealógica de la madre coincide con la del padre." << std::endl;
-                    } else {
-                        std::cout << u8"Éxito: La ascendencia genealógica de la madre no coincide con la del padre." << std::endl;
-                        caballos[posicionCaballo].madre = &madre;
-                    }
-                } else {
-                    std::cout << u8"Número de madre inválido." << std::endl;
-                }
-            } else {
-                std::cout << u8"La madre se registrará como un nuevo caballo." << std::endl;
-                caballos.push_back(agregar_ejemplar());
-                caballos[posicionCaballo].madre = &caballos[caballos.size()-1];
-                std::cout<<"MADRE REGISTRADA\n"<<std::endl;
-            }
-        } else if (opcion == 2) {
-            std::cout <<u8"¿El padre ya se encuentra registrado? (s/n): ";
-            std::string respuesta;
-            std::cin >> respuesta;
-            std::cin.ignore();
-
-            if (respuesta == "s") {
-                // Muestra todos los caballos registrados que sean machos
-                int posicionPadre;
-                std::cout << u8"Lista de sementales:" << std::endl;
-                for (int i = 0; i < caballos.size(); ++i) {
-                    if (caballos[i].sexo == "M") {
-                        std::cout << i << ". " << caballos[i].nombre << std::endl;
-                    }
-                }
-
-                std::cout << u8"Indique el número del padre: ";
-                std::cin >> posicionPadre;
-                std::cin.ignore();
-
-                if (posicionPadre >= 0 && posicionPadre < caballos.size()) {
-                    // Comparar ascendencia genealógica
-                    Caballo padre = caballos[posicionPadre];
-                    Caballo* madre = caballos[posicionCaballo].madre;
-
-                    bool existeCoincidencia = false;
-
-                    if (madre != nullptr) {     // Si la madre está asignada
-                        Caballo* abueloMaterno = madre->padre;
-                        Caballo* abuelaMaterna = madre->madre;
-
-                        // Compara la ascendencia genealógica
-                        if (abueloMaterno != nullptr) {
-                            Caballo* bisabueloMaterno = abueloMaterno->padre;
-                            Caballo* bisabuelaMaterna = abueloMaterno->madre;
-
-                            if (bisabueloMaterno != nullptr && bisabueloMaterno == padre.padre) {
-                                existeCoincidencia = true;
-                            }
-                            if (bisabuelaMaterna != nullptr && bisabuelaMaterna == padre.madre) {
-                                existeCoincidencia = true;
-                            }
-                        }
-
-                        if (abuelaMaterna != nullptr) {
-                            Caballo* bisabueloMaterno = abuelaMaterna->padre;
-                            Caballo* bisabuelaMaterna = abuelaMaterna->madre;
-
-                            if (bisabueloMaterno != nullptr && bisabueloMaterno == padre.padre) {
-                                existeCoincidencia = true;
-                            }
-                            if (bisabuelaMaterna != nullptr && bisabuelaMaterna == padre.madre) {
-                                existeCoincidencia = true;
-                            }
-                        }
-                    }
-
-                    if (existeCoincidencia) {
-                        std::cout << u8"Error: La ascendencia genealógica del padre coincide con la de la madre.\n" << std::endl;
-                    } else {
-                        std::cout << u8"Éxito: La ascendencia genealógica del padre no coincide con la de la madre.\n" << std::endl;
-                        caballos[posicionCaballo].padre = &padre;
-                    }
-                } else {
-                    std::cout << u8"Número de padre inválido." << std::endl;
-                }
-            } else {
-                std::cout << u8"El padre se registrará como un nuevo caballo." << std::endl;
-                caballos.push_back(agregar_ejemplar());
-                caballos[posicionCaballo].padre = &caballos[caballos.size() - 1];
-                std::cout<<"PADRE REGISTRADO\n"<<std::endl;
-            }
-
-        }
-    
-    } else {
-        std::cout << u8"La posición ingresada está fuera de rango.\n" << std::endl;
-    }
-    return caballos;
-
-
-
-}
 
 std::vector<Caballo> resgistar_muerte(std::vector<Caballo> original_caballos){
     std::vector<Caballo> caballos = original_caballos;
@@ -321,6 +142,145 @@ std::vector<Caballo> resgistar_muerte(std::vector<Caballo> original_caballos){
     return caballos;
 }
 
+
+
+
+bool compararAscendenciaGenetica(Caballo* caballo1, Caballo* caballo2) {
+    if (caballo1 == nullptr || caballo2 == nullptr) {
+        return false;
+    }
+
+    bool coincidenciaGeneracionActual = false;
+    
+    // Compara el padre y la madre de la generación actual
+    if (caballo1->padre == caballo2->padre && caballo1->madre == caballo2->madre) {
+        coincidenciaGeneracionActual = true;
+    }
+    
+    // Compara las generaciones anteriores de forma recursiva
+    bool coincidenciaGeneracionAnterior = compararAscendenciaGenetica(caballo1->padre, caballo2->padre) ||
+                                          compararAscendenciaGenetica(caballo1->madre, caballo2->madre);
+    
+    // Retorna true si hay coincidencia en la generación actual o en alguna generación anterior
+    return coincidenciaGeneracionActual || coincidenciaGeneracionAnterior;
+}
+
+
+std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
+    std::vector<Caballo> caballos = original_caballos;
+
+    // Mostrar la lista de caballos con sus posiciones
+    std::cout << "Caballos registrados:" << std::endl;
+    for (int i = 0; i < caballos.size(); ++i) {
+        std::cout << i << ". " << caballos[i].nombre << std::endl;
+    }
+
+    int posicionCaballo;
+    std::cout << "Ingrese la posición del caballo a asignarle padre o madre: ";
+    std::cin >> posicionCaballo;
+    std::cin.ignore();
+
+    if (posicionCaballo >= 0 && posicionCaballo < caballos.size()) {
+        std::cout << u8"Usted seleccionó al caballo " << caballos[posicionCaballo].nombre << std::endl;
+        std::cout << "1. Asignar madre\n2. Asignar padre: ";
+        int opcion;
+        std::cin >> opcion;
+        while (opcion != 1 && opcion != 2) {
+            std::cout << u8"Opción inválida. Por favor, seleccione nuevamente: ";
+            std::cin >> opcion;
+        }
+
+        if (opcion == 1) {
+            std::cout << "La madre ya se encuentra registrada? (s/n): ";
+            std::string respuesta;
+            std::cin >> respuesta;
+            std::cin.ignore();
+
+            if (respuesta == "s") {
+                // Muestra todas las yeguas registradas
+                int posicionMadre;
+                std::cout << "Lista de yeguas:" << std::endl;
+                for (int i = 0; i < caballos.size(); ++i) {
+                    if (caballos[i].sexo == "F") {
+                        std::cout << i << ". " << caballos[i].nombre << std::endl;
+                    }
+                }
+
+                std::cout << u8"Indique el número de la madre: ";
+                std::cin >> posicionMadre;
+                std::cin.ignore();
+
+                if (posicionMadre >= 0 && posicionMadre < caballos.size()) {
+                    // Comparar ascendencia genealógica
+                    Caballo madre = caballos[posicionMadre];
+                    Caballo* padre = caballos[posicionCaballo].padre;
+
+                    bool existeCoincidencia = compararAscendenciaGenetica(padre, &madre);
+
+                    if (existeCoincidencia) {
+                        std::cout << u8"Error: La ascendencia genealógica de la madre coincide con la del padre." << std::endl;
+                    } else {
+                        std::cout << u8"Éxito: La ascendencia genealógica de la madre no coincide con la del padre." << std::endl;
+                        caballos[posicionCaballo].madre = &madre;
+                    }
+                } else {
+                    std::cout << u8"Número de madre inválido." << std::endl;
+                }
+            } else {
+                std::cout << u8"La madre se registrará como un nuevo caballo." << std::endl;
+                caballos.push_back(agregar_ejemplar());
+                caballos[posicionCaballo].madre = &caballos[caballos.size() - 1];
+                std::cout << "MADRE REGISTRADA\n" << std::endl;
+            }
+        } else if (opcion == 2) {
+            std::cout << u8"¿El padre ya se encuentra registrado? (s/n): ";
+            std::string respuesta;
+            std::cin >> respuesta;
+            std::cin.ignore();
+
+            if (respuesta == "s") {
+                // Muestra todos los caballos registrados que sean machos
+                int posicionPadre;
+                std::cout << u8"Lista de sementales:" << std::endl;
+                for (int i = 0; i < caballos.size(); ++i) {
+                    if (caballos[i].sexo == "M") {
+                        std::cout << i << ". " << caballos[i].nombre << std::endl;
+                    }
+                }
+
+                std::cout << u8"Indique el número del padre: ";
+                std::cin >> posicionPadre;
+                std::cin.ignore();
+
+                if (posicionPadre >= 0 && posicionPadre < caballos.size()) {
+                    // Comparar ascendencia genealógica
+                    Caballo padre = caballos[posicionPadre];
+                    Caballo* madre = caballos[posicionCaballo].madre;
+
+                    bool existeCoincidencia = compararAscendenciaGenetica(&padre, madre);
+
+                    if (existeCoincidencia) {
+                        std::cout << u8"Error: La ascendencia genealógica del padre coincide con la de la madre.\n" << std::endl;
+                    } else {
+                        std::cout << u8"Éxito: La ascendencia genealógica del padre no coincide con la de la madre.\n" << std::endl;
+                        caballos[posicionCaballo].padre = &padre;
+                    }
+                } else {
+                    std::cout << u8"Número de padre inválido." << std::endl;
+                }
+            } else {
+                std::cout << u8"El padre se registrará como un nuevo caballo." << std::endl;
+                caballos.push_back(agregar_ejemplar());
+                caballos[posicionCaballo].padre = &caballos[caballos.size() - 1];
+                std::cout << "PADRE REGISTRADO\n" << std::endl;
+            }
+        }
+    } else {
+        std::cout << u8"La posición ingresada está fuera de rango.\n" << std::endl;
+    }
+
+    return caballos;
+}
 
 
 void menu() {
