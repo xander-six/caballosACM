@@ -14,6 +14,7 @@ public:
   int rie;
   std::string haras;
   std::string sexo;
+  std::vector<Caballo*> hijos;;
   bool vivo=true;
 };
 
