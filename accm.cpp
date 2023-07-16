@@ -1,4 +1,5 @@
 #include "Caballo.hpp"
+#include "json.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -35,60 +36,105 @@ std::vector<std::string> descendencia = {
 };
 
 
-// Función para guardar el vector de caballos en un archivo
-void guardarCaballos(const std::vector<Caballo>& caballos, const std::string& archivo) {
-    std::ofstream file(archivo, std::ios::binary);
-    if (file.is_open()) {
-        // Obtener el tamaño del vector de caballos
-        size_t numCaballos = caballos.size();
-
-        // Escribir el tamaño en el archivo
-        file.write(reinterpret_cast<const char*>(&numCaballos), sizeof(numCaballos));
-
-        // Escribir cada caballo en el archivo
-        for (const Caballo& caballo : caballos) {
-            // Escribir cada miembro del caballo en el archivo
-            file.write(reinterpret_cast<const char*>(&caballo), sizeof(caballo));
-        }
-
-        std::cout << "Caballos guardados correctamente en el archivo " << archivo << std::endl;
-    } else {
-        std::cout << "Error al abrir el archivo " << archivo << " para guardar los caballos" << std::endl;
-    }
-}
-
-
-// Función para cargar el vector de caballos desde un archivo
-std::vector<Caballo> cargarCaballos(const std::string& archivo) {
-    std::vector<Caballo> caballos;
-    std::ifstream file(archivo, std::ios::binary);
-    if (file.is_open()) {
-        // Leer el tamaño del vector de caballos del archivo
-        size_t numCaballos;
-        file.read(reinterpret_cast<char*>(&numCaballos), sizeof(numCaballos));
-
-        // Leer cada caballo del archivo
-        for (size_t i = 0; i < numCaballos; ++i) {
-            Caballo caballo;
-
-            // Leer cada miembro del caballo del archivo
-            file.read(reinterpret_cast<char*>(&caballo), sizeof(caballo));
-
-            // Agregar el caballo al vector
-            caballos.push_back(caballo);
-        }
-
-        std::cout << "Caballos cargados correctamente desde el archivo " << archivo << std::endl;
-    } else {
-        std::cout << "Error al abrir el archivo " << archivo << " para cargar los caballos" << std::endl;
-    }
-    return caballos;
-}
 
 
 //*********************************************************************************
+void guardarCaballos(const std::vector<Caballo>& caballos) {
+    nlohmann::json j;
 
+    for (const auto& caballo : caballos) {
+        nlohmann::json caballoJson;
+        caballoJson["nombre"] = caballo.nombre;
+        caballoJson["tipo_caballo"] = caballo.tipo_caballo;
+        caballoJson["padre"] = caballo.padre != nullptr ? caballo.padre->rie : -1;  // Almacenar el rie del padre
+        caballoJson["madre"] = caballo.madre != nullptr ? caballo.madre->rie : -1;  // Almacenar el rie de la madre
+        caballoJson["rie"] = caballo.rie;
+        caballoJson["haras"] = caballo.haras;
+        caballoJson["sexo"] = caballo.sexo;
+        caballoJson["vivo"] = caballo.vivo;
 
+        // Serializar los hijos recursivamente
+        nlohmann::json hijosJson;
+        for (const auto* hijo : caballo.hijos) {
+            if (hijo != nullptr) {
+                hijosJson.push_back(hijo->nombre);
+            }
+        }
+        caballoJson["hijos"] = hijosJson;
+
+        j.push_back(caballoJson);
+    }
+
+    std::ofstream file("caballos.json");
+    file << j.dump(4);  // Guarda el archivo con formato indentado y legible
+    file.close();
+
+    std::cout << "El vector de caballos se ha guardado en el archivo 'caballos.json'." << std::endl;
+}
+
+std::vector<Caballo> cargarCaballos() {
+    std::vector<Caballo> caballos;
+
+    std::ifstream file("caballos.json");
+    if (!file.is_open()) {
+        std::cout << "No se pudo abrir el archivo 'caballos.json'. El vector de caballos estará vacío." << std::endl;
+        return caballos;
+    }
+
+    nlohmann::json j;
+    file >> j;
+    file.close();
+
+    for (const auto& caballoJson : j) {
+        Caballo caballo;
+        caballo.nombre = caballoJson["nombre"];
+        caballo.tipo_caballo = caballoJson["tipo_caballo"];
+        caballo.rie = caballoJson["rie"];
+        caballo.haras = caballoJson["haras"];
+        caballo.sexo = caballoJson["sexo"];
+        caballo.vivo = caballoJson["vivo"];
+
+        // Buscar los padres en función del rie almacenado en el archivo JSON
+        int riePadre = caballoJson["padre"];
+        if (riePadre != -1) {
+            auto it = std::find_if(caballos.begin(), caballos.end(), [riePadre](const Caballo& c) {
+                return c.rie == riePadre;
+            });
+            if (it != caballos.end()) {
+                caballo.padre = &(*it);
+            }
+        }
+
+        int rieMadre = caballoJson["madre"];
+        if (rieMadre != -1) {
+            auto it = std::find_if(caballos.begin(), caballos.end(), [rieMadre](const Caballo& c) {
+                return c.rie == rieMadre;
+            });
+            if (it != caballos.end()) {
+                caballo.madre = &(*it);
+            }
+        }
+
+        // Cargar los hijos recursivamente
+        const nlohmann::json& hijosJson = caballoJson["hijos"];
+        for (const auto& nombreHijo : hijosJson) {
+            // Buscar el hijo en el vector de caballos por su nombre
+            for (auto& hijo : caballos) {
+                if (hijo.nombre == nombreHijo) {
+                    caballo.hijos.push_back(&hijo);
+                    // Establecer el padre y la madre del hijo en función de la lógica de tu programa
+                    break;
+                }
+            }
+        }
+
+        caballos.push_back(caballo);
+    }
+
+    std::cout << "El vector de caballos se ha cargado desde el archivo 'caballos.json'." << std::endl;
+
+    return caballos;
+}
 
 
 //____________________________________________________________________________________________________
@@ -209,10 +255,12 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                 std::vector<Caballo> lista_hembras;
                 int posicionMadre;
                 std::cout << "Lista de yeguas:" << std::endl;
+                int k=0;
                 for (int i = 0; i < caballos.size(); ++i) {
                     if (caballos[i].sexo == "F") {
-                        std::cout << i << ". " << caballos[i].nombre << std::endl;
+                        std::cout << k << ". " << caballos[i].nombre << " RIE: "<< caballos[i].rie<<std::endl;
                         lista_hembras.push_back(caballos[i]);
+                        k++;
                     }
                 }
 
@@ -255,10 +303,14 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
             if (respuesta == "s") {
                 // Muestra todos los caballos registrados que sean machos
                 int posicionPadre;
+                std::vector<Caballo>lista_machos;
+                int k=0;
                 std::cout << u8"Lista de sementales:" << std::endl;
                 for (int i = 0; i < caballos.size(); ++i) {
                     if (caballos[i].sexo == "M") {
-                        std::cout << i << ". " << caballos[i].nombre << std::endl;
+                        std::cout << k << ". " << caballos[i].nombre << " RIE: "<< caballos[i].rie<<std::endl;
+                        lista_machos.push_back(caballos[i]);
+                        k++;
                     }
                 }
 
@@ -266,7 +318,7 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                 std::cin >> posicionPadre;
                 std::cin.ignore();
 
-                if (posicionPadre >= 0 && posicionPadre < caballos.size()) {
+                if (posicionPadre >= 0 && posicionPadre < lista_machos.size()) {
                     // Comparar ascendencia genealógica
                     Caballo padre = caballos[posicionPadre];
                     Caballo* madre = caballos[posicionCaballo].madre;
@@ -302,7 +354,7 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
 
                             //GENEALOGIA ASCENDENTE
 
-void mostrarNivel(const Caballo* caballo, int nivel) {
+void mostrarNivel(Caballo* caballo, int nivel) {
     if (caballo != nullptr) {
         if (nivel >= 1) {
             std::cout << "Nivel " << nivel << ": " << caballo->nombre << std::endl;
@@ -313,7 +365,7 @@ void mostrarNivel(const Caballo* caballo, int nivel) {
     }
 }
 
-void genealogiaAscendente(const std::vector<Caballo>& caballos, int posicionCaballo, int numNiveles) {
+void genealogiaAscendente(std::vector<Caballo>caballos, int posicionCaballo, int numNiveles) {
     if (posicionCaballo >= 0 && posicionCaballo < caballos.size()) {
         const Caballo& caballo = caballos[posicionCaballo];
 
@@ -363,9 +415,10 @@ void genealogiaDescendenteSexo(const Caballo* individuo, int nivel, std::string 
 
 void menu() {
     Caballo caballo;
-    std::vector<Caballo> caballos;
+    std::vector<Caballo> caballos = cargarCaballos();
     bool primera_iteracion = true;
     int opcion;
+    int posicionCaballo;
 
 
     do {
@@ -382,7 +435,7 @@ void menu() {
         std::cout << "Ingrese una opcion: ";
         std::cin >> opcion;
         std::cin.ignore(); 
-        if (!primera_iteracion){
+        if (!primera_iteracion||caballos.size()>0){
             switch (opcion) {
                 case 1:
                     caballo = agregar_ejemplar();
@@ -399,7 +452,6 @@ void menu() {
                     for (int i = 0; i < caballos.size(); ++i) {
                         std::cout << i << ". " << caballos[i].nombre << std::endl;
                     }
-                    int posicionCaballo;
                     std::cout << "Ingrese la posición del caballo: ";
                     std::cin >> posicionCaballo;
                     std::cin.ignore();
@@ -410,37 +462,29 @@ void menu() {
                     for (int i = 0; i < caballos.size(); ++i) {
                         std::cout << i << ". " << caballos[i].nombre << std::endl;
                     }
-                    int posicionCaballo;
+                    
                     std::cout << "Ingrese la posición del caballo: ";
                     std::cin >> posicionCaballo;
                     std::cin.ignore();
-                    Caballo* caballoBase = &caballos[posicionCaballo];
-                    determinarGenealogiaDescendente(caballoBase,0);
+                    determinarGenealogiaDescendente(&caballos[posicionCaballo],0);
                     break;
                 case 6:
-                    
-                    
-
                     std::cout << "Caballos registrados:" << std::endl;
                     for (int i = 0; i < caballos.size(); ++i) {
                         std::cout << i << ". " << caballos[i].nombre << std::endl;
                     }
-
-                    int posicionCaballo;
                     std::cout << "Ingrese la posición del caballo: ";
                     std::cin >> posicionCaballo;
                     std::cin.ignore();
 
-                    int opcion;
+                    int n_opcion;
                     std::cout<<"1.Masculino o 2.Femenino: ";
-                    std::cin >> opcion;
+                    std::cin >> n_opcion;
                     std::cin.ignore();
-
-                    Caballo* caballoBase = &caballos[posicionCaballo];
-                    if(opcion == 1)
-                        genealogiaDescendenteSexo(caballoBase, 0, "M");
+                    if(n_opcion == 1)
+                        genealogiaDescendenteSexo(&caballos[posicionCaballo], 0, "M");
                     else{
-                        genealogiaDescendenteSexo(caballoBase,0,"F");
+                        genealogiaDescendenteSexo(&caballos[posicionCaballo],0,"F");
                     }
                     break;
 
@@ -452,7 +496,7 @@ void menu() {
                     
                 case 9:
                     std::cout << "Saliendo del menu..." << std::endl;
-                    guardarCaballos(caballos,"caballos.dat");
+                    guardarCaballos(caballos);
                     break;
 
                 default:
@@ -463,7 +507,7 @@ void menu() {
 
         }else{
             if(opcion == 1){
-                agregar_ejemplar();
+                caballo=agregar_ejemplar();
                 primera_iteracion=false;
                 caballos.push_back(caballo);
             }else{
