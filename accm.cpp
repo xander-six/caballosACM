@@ -1,16 +1,22 @@
+//    _____  .__                                  .___            
+//   /  _  \ |  |   ____ ___  _______    ____   __| _/___________ 
+//  /  /_\  \|  | _/ __ \\  \/  \__  \  /    \ / __ _/ __ \_  __ \
+// /    |    |  |_\  ___/ >    < / __ \|   |  / /_/ \  ___/|  | \/
+// \____|__  |____/\___  /__/\_ (____  |___|  \____ |\___  |__|   
+//        _\/_____     \/      \/    \/     \/     \/    \/       
+//        \______ \   ____   ____   ____  __________              
+//         |    |  \ /  _ \ /    \ /  _ \/  ___/  _ \   Gestor de caballos          
+//         |    `   (  <_> |   |  (  <_> \___ (  <_> )  Universidad de Talca           
+//        /_______  /\____/|___|  /\____/____  \____/   https://github.com/xander-six/caballosACM.git      
+//                \/            \/           \/                   
 
-//    _____  .__                                    .___            
-//   /  _  \ |  |   ____ ___  ________    ____    __| _/___________ 
-//  /  /_\  \|  | _/ __ \\  \/  /\__  \  /    \  / __ |/ __ \_  __ \
-// /    |    \  |_\  ___/ >    <  / __ \|   |  \/ /_/ \  ___/|  | \/
-// \____|__  /____/\___  >__/\_ \(____  /___|  /\____ |\___  >__|   
-//         \/          \/      \/     \/     \/      \/    \/       
-//        ________                                                  
-//        \______ \   ____   ____   ____  __________    https://github.com/xander-six/caballosACM.git            
-//         |    |  \ /  _ \ /    \ /  _ \/  ___/  _ \   Universidad de Talca            
-//         |    `   (  <_> )   |  (  <_> )___ (  <_> )  18-07-2023            
-//        /_______  /\____/|___|  /\____/____  >____/   Gestor de cabaallos            
-//                \/            \/           \/                     
+
+/***************************************************************************************\
+ * Se asume que todas la entradas se ingresan de forma correcta.                        *
+ * Asuma que debe contar con lo siguiente gcc (MinGW.org GCC-6.3.0-1) 6.3.0             *
+ * dicha version se encuentra disponible en https://sourceforge.net/projects/mingw/     *
+ * Todos los archivos deben encontrarse en la mismo directorio del fichero .cpp         *                                        *   
+\***************************************************************************************/
 
 #include "Caballo.hpp"
 #include "json.hpp"
@@ -19,30 +25,26 @@
 #include <vector>
 #include <fstream>
 
-
+        //GUARDADO Y CARGA
 //*********************************************************************************
+
+//Gurada en un json todos los caballos que hay en el vector de caballos
 void guardarCaballos(const std::vector<Caballo>& caballos) {
+    //utiliza libreria de tercero
     nlohmann::json j;
 
     for (const auto& caballo : caballos) {
+        //guarda todos los elementos dentro de cada caballo
         nlohmann::json caballoJson;
         caballoJson["nombre"] = caballo.nombre;
         caballoJson["tipo_caballo"] = caballo.tipo_caballo;
-        caballoJson["padre"] = caballo.padre != nullptr ? caballo.padre->rie : -1;  // Almacenar el rie del padre
-        caballoJson["madre"] = caballo.madre != nullptr ? caballo.madre->rie : -1;  // Almacenar el rie de la madre
+        caballoJson["padre"] =  -1;  
+        caballoJson["madre"] =  -1; 
         caballoJson["rie"] = caballo.rie;
         caballoJson["haras"] = caballo.haras;
         caballoJson["sexo"] = caballo.sexo;
         caballoJson["vivo"] = caballo.vivo;
-
-        // Serializar los hijos recursivamente
-        nlohmann::json hijosJson;
-        for (const auto* hijo : caballo.hijos) {
-            if (hijo != nullptr) {
-                hijosJson.push_back(hijo->nombre);
-            }
-        }
-        caballoJson["hijos"] = hijosJson;
+        caballoJson["hijos"] = -1;
 
         j.push_back(caballoJson);
     }
@@ -54,6 +56,8 @@ void guardarCaballos(const std::vector<Caballo>& caballos) {
     std::cout << "El vector de caballos se ha guardado en el archivo 'caballos.json'." << std::endl;
 }
 
+
+//Carga los caballos a partir de un json
 std::vector<Caballo> cargarCaballos() {
     std::vector<Caballo> caballos;
 
@@ -98,6 +102,7 @@ std::vector<Caballo> cargarCaballos() {
                             //AGREGAR EJEMPLAR
 
 Caballo agregar_ejemplar(){
+    //pide ingreso de todos los datos
     Caballo caballo;
     std::cout << "Ingrese el nombre del caballo: ";
     std::getline(std::cin, caballo.nombre);
@@ -114,7 +119,7 @@ Caballo agregar_ejemplar(){
 
     std::cout << "Ingrese el sexo (M/F): ";
     std::getline(std::cin, caballo.sexo);
-
+    //Asigna los padres en nulo
     caballo.padre = nullptr;
     caballo.madre = nullptr;
     return caballo;
@@ -127,6 +132,7 @@ Caballo agregar_ejemplar(){
 
 std::vector<Caballo> registar_muerte(std::vector<Caballo> original_caballos){
     std::vector<Caballo> caballos = original_caballos;
+
     // Mostrar la lista de caballos con sus posiciones
     std::cout << "Caballos registrados:" << std::endl;
     for (int i = 0; i < caballos.size(); ++i) {
@@ -139,6 +145,7 @@ std::vector<Caballo> registar_muerte(std::vector<Caballo> original_caballos){
     std::cin >> seleccion;
     std::cin.ignore();
 
+    //Verifica el ingreso de datos
     if (seleccion >= 0 && seleccion < caballos.size()) {
         caballos[seleccion].vivo = false;
         std::cout << "El caballo en la posicion " << seleccion << " ha sido marcado como muerto." << std::endl;
@@ -149,7 +156,7 @@ std::vector<Caballo> registar_muerte(std::vector<Caballo> original_caballos){
       
     return caballos;
 }
-
+//_______________________________________________________________________________________________________________________
 
                             //GENEALOGIA ASCENDENTE
 void obtenerAncestros(Caballo* individuo) {
@@ -163,6 +170,9 @@ void obtenerAncestros(Caballo* individuo) {
     obtenerAncestros(individuo->padre);
     obtenerAncestros(individuo->madre);
 }
+//_______________________________________________________________________________________________________________________
+
+
 //_______________________________________________________________________________________________________________________
 
                             //ASIGNAR PADRE O MADRE
@@ -206,6 +216,8 @@ std::vector<Caballo> asignar_padres(std::vector<Caballo> original_caballos) {
         std::cout << "1. Asignar madre\n2. Asignar padre\nRESPUESTA: ";
         int opcion;
         std::cin >> opcion;
+
+        //verifica entrada
         while (opcion != 1 && opcion != 2) {
             std::cout << u8"Opción invalida. Por favor, seleccione nuevamente: ";
             std::cin >> opcion;
@@ -219,12 +231,11 @@ std::vector<Caballo> asignar_padres(std::vector<Caballo> original_caballos) {
             std::cin.ignore();
 
             if (respuesta == "s") {
-                // Muestra todas las yeguas registradas
                 std::vector<Caballo> lista_hembras;
                 int posicionMadre;
                 std::cout << "Lista de yeguas:" << std::endl;
                 int k = 0;
-                for (int i = 0; i < caballos.size(); ++i) {
+                for (int i = 0; i < caballos.size(); ++i) {// Muestra todas las yeguas registradas
                     if (caballos[i].sexo == "F") {
                         std::cout << k << ". " << caballos[i].nombre << " RIE: " << caballos[i].rie << std::endl;
                         lista_hembras.push_back(caballos[i]);
@@ -255,6 +266,7 @@ std::vector<Caballo> asignar_padres(std::vector<Caballo> original_caballos) {
                     std::cout << u8"Numero de madre invalido." << std::endl;
                 }
             } else {
+                //La madre se registra como un nuevo caballo
                 std::cout << u8"La madre se registrara como un nuevo caballo." << std::endl;
                 Caballo madre = agregar_ejemplar();
                 madre.hijos.push_back(&caballos[posicionCaballo]);
@@ -305,6 +317,7 @@ std::vector<Caballo> asignar_padres(std::vector<Caballo> original_caballos) {
                     std::cout << u8"Numero de padre invalido." << std::endl;
                 }
             } else {
+                //El padre se registra como un nuevo caballo
                 std::cout << u8"El padre se registrara como un nuevo caballo." << std::endl;
                 Caballo padre = agregar_ejemplar();
                 padre.hijos.push_back(&caballos[posicionCaballo]);
@@ -334,6 +347,7 @@ void mostrarDescendientes(Caballo* caballo, int i = 0) {
         if (caballo->hijos.empty()) {
             std::cout << "No tiene descendientes registrados." << std::endl;
             return;
+            //caso base
         }
 
         for (const auto& descendiente : caballo->hijos) {
@@ -344,6 +358,9 @@ void mostrarDescendientes(Caballo* caballo, int i = 0) {
 }
 //________________________________________________________________________________________________________________________
 
+//_______________________________________________________________________________________________________________________
+
+                //MUESTRA DESCENDIENTES POR SEXO
 
 void mostrarDescendientesSexo(Caballo* caballo, std::string sexo) {
     if (caballo != nullptr) {
@@ -352,6 +369,7 @@ void mostrarDescendientesSexo(Caballo* caballo, std::string sexo) {
         if (caballo->hijos.empty()) {
             std::cout << "No tiene descendientes registrados." << std::endl;
             return;
+            //caso base
         }
 
         for (const auto& descendiente : caballo->hijos) {
@@ -363,6 +381,12 @@ void mostrarDescendientesSexo(Caballo* caballo, std::string sexo) {
 }
 
 
+//_______________________________________________________________________________________________________________________
+
+
+//_______________________________________________________________________________________________________________________
+
+                            //DETERMINA CRUCE
 
 void determinarCruce(std::vector<Caballo> caballos){
     std::vector<Caballo>lista_machos;
@@ -399,19 +423,23 @@ void determinarCruce(std::vector<Caballo> caballos){
     }
     std::cout<<"ES POSIBLE APAREAR ESTOS DOS CABALLOS"<<std::endl;
 }
+//_______________________________________________________________________________________________________________________
 
+//_______________________________________________________________________________________________________________________
+
+                        // DETERMINA MISMO NOMBRE
 
 void mismoNombre(std::vector<Caballo> caballos) {
     std::string nombre;
     std::cout << "INGRESE EL NOMBRE A BUSCAR: ";
     std::getline(std::cin, nombre);
 
-    // Convertir el nombre ingresado a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+    // Convertir el nombre ingresado a minúsculas
     std::transform(nombre.begin(), nombre.end(), nombre.begin(), [](unsigned char c) { return std::tolower(c); });
 
     bool encontrado = false;
     for (const Caballo& ejemplar : caballos) {
-        // Convertir el nombre del caballo actual a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+        // Convertir el nombre del caballo actual a minusculas
         std::string nombreCaballo = ejemplar.nombre;
         std::transform(nombreCaballo.begin(), nombreCaballo.end(), nombreCaballo.begin(), [](unsigned char c) { return std::tolower(c); });
 
@@ -425,17 +453,22 @@ void mismoNombre(std::vector<Caballo> caballos) {
         std::cout << "No se encontro ningún caballo con el nombre " << nombre  << std::endl;
     }
 }
+//_______________________________________________________________________________________________________________________
+
+
+//_______________________________________________________________________________________________________________________
+                            // DETERMINA MISMO HARAS
 void mismoHaras(std::vector<Caballo> caballos) {
     std::string nombre;
     std::cout << "INGRESE EL NOMBRE DEL HARAS A BUSCAR: ";
     std::getline(std::cin, nombre);
 
-    // Convertir el nombre ingresado a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+    // Convertir el nombre ingresado a minusculas 
     std::transform(nombre.begin(), nombre.end(), nombre.begin(), [](unsigned char c) { return std::tolower(c); });
 
     bool encontrado = false;
     for (const Caballo& ejemplar : caballos) {
-        // Convertir el nombre del caballo actual a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+        // Convertir el nombre del caballo actual a minusculas 
         std::string nombreCaballo = ejemplar.haras;
         std::transform(nombreCaballo.begin(), nombreCaballo.end(), nombreCaballo.begin(), [](unsigned char c) { return std::tolower(c); });
 
@@ -449,7 +482,11 @@ void mismoHaras(std::vector<Caballo> caballos) {
         std::cout << "No se encontro ningún caballo con el nombre " << nombre  << std::endl;
     }
 }
+//_______________________________________________________________________________________________________________________
 
+
+//_______________________________________________________________________________________________________________________
+                        // MENU
 void menu() {
     std::vector<Caballo> caballos = cargarCaballos();
     bool primera_iteracion = true;
