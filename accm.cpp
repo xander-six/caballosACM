@@ -1,41 +1,23 @@
+
+//    _____  .__                                    .___            
+//   /  _  \ |  |   ____ ___  ________    ____    __| _/___________ 
+//  /  /_\  \|  | _/ __ \\  \/  /\__  \  /    \  / __ |/ __ \_  __ \
+// /    |    \  |_\  ___/ >    <  / __ \|   |  \/ /_/ \  ___/|  | \/
+// \____|__  /____/\___  >__/\_ \(____  /___|  /\____ |\___  >__|   
+//         \/          \/      \/     \/     \/      \/    \/       
+//        ________                                                  
+//        \______ \   ____   ____   ____  __________    https://github.com/xander-six/caballosACM.git            
+//         |    |  \ /  _ \ /    \ /  _ \/  ___/  _ \   Universidad de Talca            
+//         |    `   (  <_> )   |  (  <_> )___ (  <_> )  18-07-2023            
+//        /_______  /\____/|___|  /\____/____  >____/   Gestor de cabaallos            
+//                \/            \/           \/                     
+
 #include "Caballo.hpp"
 #include "json.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
-
-
-
-//**********************************************************************************
-//VARIABLES GLOBALES
-std::vector<std::string> genealogia = {
-"Tú (persona central)",
-"Padre/Madre",
-"Abuelo/Abuela",
-"Bisabuelo/Bisabuela",
-"Tatarabuelo/Tatarabuela",
-"Trastatarabuelo/Trastatarabuela",
-"Quintarabuelo/Quintarabuela",
-"Sextarabuelo/Sextarabuela",
-"Septimarabuelo/Septimarabuela",
-"Octarabuelo/Octarabuela"
-};
-
-std::vector<std::string> descendencia = {
-"Hijo / Hija",
-"Nieto / Nieta",
-"Bisnieto / Bisnieta",
-"Tataranieto / Tataranieta",
-"Trastataranieto / Trastataranieta",
-"Quintataranieto / Quintataranieta",
-"Sextataranieto / Sextataranieta",
-"Septimataranieto / Septimataranieta",
-"Octotaranieto / Octotaranieta",
-"Decimotataranieto / Decimotataranieta"
-};
-
-
 
 
 //*********************************************************************************
@@ -94,39 +76,10 @@ std::vector<Caballo> cargarCaballos() {
         caballo.sexo = caballoJson["sexo"];
         caballo.vivo = caballoJson["vivo"];
 
-        // Buscar los padres en función del rie almacenado en el archivo JSON
-        int riePadre = caballoJson["padre"];
-        if (riePadre != -1) {
-            auto it = std::find_if(caballos.begin(), caballos.end(), [riePadre](const Caballo& c) {
-                return c.rie == riePadre;
-            });
-            if (it != caballos.end()) {
-                caballo.padre = &(*it);
-            }
-        }
-
-        int rieMadre = caballoJson["madre"];
-        if (rieMadre != -1) {
-            auto it = std::find_if(caballos.begin(), caballos.end(), [rieMadre](const Caballo& c) {
-                return c.rie == rieMadre;
-            });
-            if (it != caballos.end()) {
-                caballo.madre = &(*it);
-            }
-        }
-
-        // Cargar los hijos recursivamente
-        const nlohmann::json& hijosJson = caballoJson["hijos"];
-        for (const auto& nombreHijo : hijosJson) {
-            // Buscar el hijo en el vector de caballos por su nombre
-            for (auto& hijo : caballos) {
-                if (hijo.nombre == nombreHijo) {
-                    caballo.hijos.push_back(&hijo);
-                    // Establecer el padre y la madre del hijo en función de la lógica de tu programa
-                    break;
-                }
-            }
-        }
+        // Inicializar los atributos de padre, madre y hijos como nulos o vacíos
+        caballo.padre = nullptr;
+        caballo.madre = nullptr;
+        caballo.hijos.clear();
 
         caballos.push_back(caballo);
     }
@@ -135,6 +88,9 @@ std::vector<Caballo> cargarCaballos() {
 
     return caballos;
 }
+//*********************************************************************************
+
+
 
 
 //____________________________________________________________________________________________________
@@ -169,7 +125,7 @@ Caballo agregar_ejemplar(){
 
                             //REGISTRAR MUERTE
 
-std::vector<Caballo> resgistar_muerte(std::vector<Caballo> original_caballos){
+std::vector<Caballo> registar_muerte(std::vector<Caballo> original_caballos){
     std::vector<Caballo> caballos = original_caballos;
     // Mostrar la lista de caballos con sus posiciones
     std::cout << "Caballos registrados:" << std::endl;
@@ -195,6 +151,18 @@ std::vector<Caballo> resgistar_muerte(std::vector<Caballo> original_caballos){
 }
 
 
+                            //GENEALOGIA ASCENDENTE
+void obtenerAncestros(Caballo* individuo) {
+    if (individuo == nullptr) {
+        return; // Caso base: el individuo no tiene ancestros
+    }
+
+    std::cout << "Nombre del individuo: " << individuo->nombre << std::endl;
+
+    // Recursivamente obtener los ancestros del padre y de la madre
+    obtenerAncestros(individuo->padre);
+    obtenerAncestros(individuo->madre);
+}
 //_______________________________________________________________________________________________________________________
 
                             //ASIGNAR PADRE O MADRE
@@ -219,13 +187,13 @@ bool compararAscendenciaGenetica(Caballo* caballo1, Caballo* caballo2, int fin, 
 }
 
 
-std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
+std::vector<Caballo> asignar_padres(std::vector<Caballo> original_caballos) {
     std::vector<Caballo> caballos = original_caballos;
 
     // Mostrar la lista de caballos con sus posiciones
     std::cout << "Caballos registrados:" << std::endl;
     for (int i = 0; i < caballos.size(); ++i) {
-        std::cout << i << ". " << caballos[i].nombre << std::endl;
+        std::cout << i << ". " << caballos[i].nombre << " (Sexo: " << caballos[i].sexo << ")" << std::endl;
     }
 
     int posicionCaballo;
@@ -235,15 +203,15 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
 
     if (posicionCaballo >= 0 && posicionCaballo < caballos.size()) {
         std::cout << u8"Usted seleccionó al caballo " << caballos[posicionCaballo].nombre << std::endl;
-        std::cout << "1. Asignar madre\n2. Asignar padre: ";
+        std::cout << "1. Asignar madre\n2. Asignar padre\nRESPUESTA: ";
         int opcion;
         std::cin >> opcion;
         while (opcion != 1 && opcion != 2) {
-            std::cout << u8"Opción inválida. Por favor, seleccione nuevamente: ";
+            std::cout << u8"Opción invalida. Por favor, seleccione nuevamente: ";
             std::cin >> opcion;
         }
 
-        //MADRE
+        // MADRE
         if (opcion == 1) {
             std::cout << "La madre ya se encuentra registrada? (s/n): ";
             std::string respuesta;
@@ -255,16 +223,16 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                 std::vector<Caballo> lista_hembras;
                 int posicionMadre;
                 std::cout << "Lista de yeguas:" << std::endl;
-                int k=0;
+                int k = 0;
                 for (int i = 0; i < caballos.size(); ++i) {
                     if (caballos[i].sexo == "F") {
-                        std::cout << k << ". " << caballos[i].nombre << " RIE: "<< caballos[i].rie<<std::endl;
+                        std::cout << k << ". " << caballos[i].nombre << " RIE: " << caballos[i].rie << std::endl;
                         lista_hembras.push_back(caballos[i]);
                         k++;
                     }
                 }
 
-                std::cout << u8"Indique el número de la madre: ";
+                std::cout << u8"Indique el numero de la madre: ";
                 std::cin >> posicionMadre;
                 std::cin.ignore();
 
@@ -276,18 +244,18 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                     bool existeCoincidencia = compararAscendenciaGenetica(padre, &madre, 3, 0);
 
                     if (existeCoincidencia) {
-                        std::cout << u8"Error: La ascendencia genealógica de la madre coincide con la del padre." << std::endl;
+                        std::cout << u8"Error: La ascendencia genealogica de la madre coincide con la del padre." << std::endl;
                     } else {
-                        std::cout << u8"Éxito: La ascendencia genealógica de la madre no coincide con la del padre." << std::endl;
+                        std::cout << u8"Éxito: La ascendencia genealogica de la madre no coincide con la del padre." << std::endl;
                         madre.hijos.push_back(&caballos[posicionCaballo]);
                         caballos[posicionCaballo].madre = &madre;
-                        
+                        std::cout << u8"Asignación de madre exitosa." << std::endl;
                     }
                 } else {
-                    std::cout << u8"Número de madre inválido." << std::endl;
+                    std::cout << u8"Numero de madre invalido." << std::endl;
                 }
             } else {
-                std::cout << u8"La madre se registrará como un nuevo caballo." << std::endl;
+                std::cout << u8"La madre se registrara como un nuevo caballo." << std::endl;
                 Caballo madre = agregar_ejemplar();
                 madre.hijos.push_back(&caballos[posicionCaballo]);
                 caballos.push_back(madre);
@@ -295,7 +263,7 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                 std::cout << "MADRE REGISTRADA\n" << std::endl;
             }
         } else if (opcion == 2) {
-            std::cout << u8"¿El padre ya se encuentra registrado? (s/n): ";
+            std::cout << u8"El padre ya se encuentra registrado? (s/n): ";
             std::string respuesta;
             std::cin >> respuesta;
             std::cin.ignore();
@@ -303,18 +271,18 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
             if (respuesta == "s") {
                 // Muestra todos los caballos registrados que sean machos
                 int posicionPadre;
-                std::vector<Caballo>lista_machos;
-                int k=0;
+                std::vector<Caballo> lista_machos;
+                int k = 0;
                 std::cout << u8"Lista de sementales:" << std::endl;
                 for (int i = 0; i < caballos.size(); ++i) {
                     if (caballos[i].sexo == "M") {
-                        std::cout << k << ". " << caballos[i].nombre << " RIE: "<< caballos[i].rie<<std::endl;
+                        std::cout << k << ". " << caballos[i].nombre << " RIE: " << caballos[i].rie << std::endl;
                         lista_machos.push_back(caballos[i]);
                         k++;
                     }
                 }
 
-                std::cout << u8"Indique el número del padre: ";
+                std::cout << u8"Indique el numero del padre: ";
                 std::cin >> posicionPadre;
                 std::cin.ignore();
 
@@ -326,17 +294,18 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
                     bool existeCoincidencia = compararAscendenciaGenetica(&padre, madre, 3, 0);
 
                     if (existeCoincidencia) {
-                        std::cout << u8"Error: La ascendencia genealógica del padre coincide con la de la madre.\n" << std::endl;
+                        std::cout << u8"Error: La ascendencia genealogica del padre coincide con la de la madre." << std::endl;
                     } else {
-                        std::cout << u8"Éxito: La ascendencia genealógica del padre no coincide con la de la madre.\n" << std::endl;
+                        std::cout << u8"Exito: La ascendencia genealogica del padre no coincide con la de la madre." << std::endl;
                         padre.hijos.push_back(&caballos[posicionCaballo]);
                         caballos[posicionCaballo].padre = &padre;
+                        std::cout << u8"Asignacion de padre exitosa." << std::endl;
                     }
                 } else {
-                    std::cout << u8"Número de padre inválido." << std::endl;
+                    std::cout << u8"Numero de padre invalido." << std::endl;
                 }
             } else {
-                std::cout << u8"El padre se registrará como un nuevo caballo." << std::endl;
+                std::cout << u8"El padre se registrara como un nuevo caballo." << std::endl;
                 Caballo padre = agregar_ejemplar();
                 padre.hijos.push_back(&caballos[posicionCaballo]);
                 caballos.push_back(padre);
@@ -345,107 +314,175 @@ std::vector<Caballo> asingar_padres(std::vector<Caballo> original_caballos) {
             }
         }
     } else {
-        std::cout << u8"La posición ingresada está fuera de rango.\n" << std::endl;
+        std::cout << u8"La posicion ingresada esta fuera de rango.\n" << std::endl;
     }
 
     return caballos;
 }
 //_____________________________________________________________________________________________________________________
 
-                            //GENEALOGIA ASCENDENTE
-
-void mostrarNivel(Caballo* caballo, int nivel) {
-    if (caballo != nullptr) {
-        if (nivel >= 1) {
-            std::cout << "Nivel " << nivel << ": " << caballo->nombre << std::endl;
-
-            mostrarNivel(caballo->madre, nivel - 1);
-            mostrarNivel(caballo->padre, nivel - 1);
-        }
-    }
-}
-
-void genealogiaAscendente(std::vector<Caballo>caballos, int posicionCaballo, int numNiveles) {
-    if (posicionCaballo >= 0 && posicionCaballo < caballos.size()) {
-        const Caballo& caballo = caballos[posicionCaballo];
-
-        std::cout << "Genealogía ascendente de " << caballo.nombre << ":" << std::endl;
-
-        std::cout << "Nivel 1: " << caballo.nombre << std::endl;
-
-        mostrarNivel(caballo.madre, numNiveles);
-        mostrarNivel(caballo.padre, numNiveles);
-    } else {
-        std::cout << "La posición ingresada está fuera de rango." << std::endl;
-    }
-}
 
 //_________________________________________________________________________________________________________________
 
                             //GENEALOGIA DESCENDENTE
 
-void determinarGenealogiaDescendente(const Caballo* individuo, int nivel) {
-  // Imprimir el nombre del individuo con indentación basada en el nivel
-  std::cout << "Nivel "<< nivel << ": "<< individuo->nombre << std::endl;
+void mostrarDescendientes(Caballo* caballo, int i = 0) {
+    if (caballo != nullptr) {
+        if(i == 0)
+            std::cout << "Descendientes de " << caballo->nombre << ":" << std::endl;
+        
+        if (caballo->hijos.empty()) {
+            std::cout << "No tiene descendientes registrados." << std::endl;
+            return;
+        }
 
-  // Verificar si el individuo tiene hijos
-  if (!individuo->hijos.empty()) {
-    // Recorrer los hijos del individuo de manera recursiva
-    for (const auto* hijo : individuo->hijos) {
-      determinarGenealogiaDescendente(hijo, nivel + 1);
+        for (const auto& descendiente : caballo->hijos) {
+            std::cout << descendiente->nombre << std::endl;
+            mostrarDescendientes(descendiente, i+1);
+        }
     }
-  }
 }
 //________________________________________________________________________________________________________________________
 
 
-void genealogiaDescendenteSexo(const Caballo* individuo, int nivel, std::string sexo) {
-  // Imprimir el nombre del individuo con indentación basada en el nivel
-  if(individuo->sexo==sexo)
-    std::cout << "Nivel "<< nivel << ": "<< individuo->nombre << std::endl;
+void mostrarDescendientesSexo(Caballo* caballo, std::string sexo) {
+    if (caballo != nullptr) {
+        std::cout << "Descendientes de " << caballo->nombre << ":" << std::endl;
+        
+        if (caballo->hijos.empty()) {
+            std::cout << "No tiene descendientes registrados." << std::endl;
+            return;
+        }
 
-  // Verificar si el individuo tiene hijos
-  if (!individuo->hijos.empty()) {
-    // Recorrer los hijos del individuo de manera recursiva
-    for (const auto* hijo : individuo->hijos) {
-      determinarGenealogiaDescendente(hijo, nivel + 1);
+        for (const auto& descendiente : caballo->hijos) {
+            if(descendiente->sexo==sexo)
+                std::cout << descendiente->nombre << std::endl;
+            mostrarDescendientes(descendiente);
+        }
     }
-  }
+}
+
+
+
+void determinarCruce(std::vector<Caballo> caballos){
+    std::vector<Caballo>lista_machos;
+    std::vector<Caballo>lista_hembras;
+    std::cout<<"Lista de yeguas:"<<std::endl;
+    int k = 0;
+    int yegua, macho;
+    for (int i = 0; i < caballos.size(); ++i) {
+        if (caballos[i].sexo == "F") {
+            std::cout << k << ". " << caballos[i].nombre << " RIE: " << caballos[i].rie << std::endl;
+            lista_hembras.push_back(caballos[i]);
+            k++;
+        }
+    }
+    std::cout<<"Indique el numero de la yegua: ";
+    std::cin>>yegua;
+    std::cin.ignore();
+
+    std::cout<<"Lista de machos:"<<std::endl;
+    k = 0;
+    for (int i = 0; i < caballos.size(); ++i) {
+        if (caballos[i].sexo == "M") {
+            std::cout << k << ". " << caballos[i].nombre << " RIE: " << caballos[i].rie << std::endl;
+            lista_machos.push_back(caballos[i]);
+            k++;
+        }
+    }
+    std::cout<<"Indique el numero del macho: ";
+    std::cin>>macho;
+    std::cin.ignore();
+    if(compararAscendenciaGenetica(&lista_machos[macho], &lista_hembras[yegua], 3,0)){
+        std::cout<<"NO ES POSIBLE APAREAR ESTOS DOS CABALLOS"<<std::endl;
+        return;
+    }
+    std::cout<<"ES POSIBLE APAREAR ESTOS DOS CABALLOS"<<std::endl;
+}
+
+
+void mismoNombre(std::vector<Caballo> caballos) {
+    std::string nombre;
+    std::cout << "INGRESE EL NOMBRE A BUSCAR: ";
+    std::getline(std::cin, nombre);
+
+    // Convertir el nombre ingresado a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+    std::transform(nombre.begin(), nombre.end(), nombre.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    bool encontrado = false;
+    for (const Caballo& ejemplar : caballos) {
+        // Convertir el nombre del caballo actual a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+        std::string nombreCaballo = ejemplar.nombre;
+        std::transform(nombreCaballo.begin(), nombreCaballo.end(), nombreCaballo.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        if (nombreCaballo == nombre) {
+            std::cout << "Caballo: " << ejemplar.nombre << " Haras: " << ejemplar.haras << " RIE: " << ejemplar.rie << std::endl;
+            encontrado = true;
+        }
+    }
+
+    if (!encontrado) {
+        std::cout << "No se encontro ningún caballo con el nombre " << nombre  << std::endl;
+    }
+}
+void mismoHaras(std::vector<Caballo> caballos) {
+    std::string nombre;
+    std::cout << "INGRESE EL NOMBRE DEL HARAS A BUSCAR: ";
+    std::getline(std::cin, nombre);
+
+    // Convertir el nombre ingresado a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+    std::transform(nombre.begin(), nombre.end(), nombre.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    bool encontrado = false;
+    for (const Caballo& ejemplar : caballos) {
+        // Convertir el nombre del caballo actual a minúsculas (opcional, para búsqueda insensible a mayúsculas/minúsculas)
+        std::string nombreCaballo = ejemplar.haras;
+        std::transform(nombreCaballo.begin(), nombreCaballo.end(), nombreCaballo.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        if (nombreCaballo == nombre) {
+            std::cout << "Caballo: " << ejemplar.nombre << " Haras: " << ejemplar.haras << " RIE: " << ejemplar.rie << std::endl;
+            encontrado = true;
+        }
+    }
+
+    if (!encontrado) {
+        std::cout << "No se encontro ningún caballo con el nombre " << nombre  << std::endl;
+    }
 }
 
 void menu() {
-    Caballo caballo;
     std::vector<Caballo> caballos = cargarCaballos();
     bool primera_iteracion = true;
     int opcion;
     int posicionCaballo;
 
-
     do {
         std::cout << "------- MENU -------" << std::endl;
         std::cout << "1. Registrar nuevo ejemplar" << std::endl;
         std::cout << "2. Registrar la muerte de ejemplares" << std::endl;
-        std::cout << "3. Asingar padre o madre" << std::endl;
+        std::cout << "3. Asignar padre o madre" << std::endl;
         std::cout << "4. Determinar genealogia ascendente de un individuo especifico" << std::endl;
         std::cout << "5. Determinar genealogia descendente de un individuo especifico" << std::endl;
         std::cout << "6. Determinar genealogia descendente de un sexo especifico para un individuo dado" << std::endl;
         std::cout << "7. Determinar si se pueden cruzar un par potro/yegua" << std::endl;
         std::cout << "8. Mostrar todos los ejemplares que tengan el mismo nombre" << std::endl;
-        std::cout << "9. Salir" << std::endl;
+        std::cout << "9. Mostrar todos los ejemplares provenientes de un mismo haras"<<std::endl;
+        std::cout << "10. Eliminar todos los caballos"<<std::endl;
+        std::cout << "11. Salir" << std::endl;
         std::cout << "Ingrese una opcion: ";
         std::cin >> opcion;
         std::cin.ignore(); 
-        if (!primera_iteracion||caballos.size()>0){
+        if (!primera_iteracion || caballos.size() > 0) {
             switch (opcion) {
                 case 1:
-                    caballo = agregar_ejemplar();
-                    caballos.push_back(caballo);
+                    
+                    caballos.push_back(agregar_ejemplar());
                     break;
                 case 2:
-                    caballos = resgistar_muerte(caballos);
+                    caballos = registar_muerte(caballos);
                     break;
                 case 3:
-                    caballos = asingar_padres(caballos);
+                    caballos = asignar_padres(caballos);
                     break;
                 case 4:
                     std::cout << "Caballos registrados:" << std::endl;
@@ -455,18 +492,17 @@ void menu() {
                     std::cout << "Ingrese la posición del caballo: ";
                     std::cin >> posicionCaballo;
                     std::cin.ignore();
-                    genealogiaAscendente(caballos,posicionCaballo,0);
+                    obtenerAncestros(&caballos[posicionCaballo]);
                     break;
                 case 5:
                     std::cout << "Caballos registrados:" << std::endl;
                     for (int i = 0; i < caballos.size(); ++i) {
                         std::cout << i << ". " << caballos[i].nombre << std::endl;
                     }
-                    
                     std::cout << "Ingrese la posición del caballo: ";
                     std::cin >> posicionCaballo;
                     std::cin.ignore();
-                    determinarGenealogiaDescendente(&caballos[posicionCaballo],0);
+                    mostrarDescendientes(&caballos[posicionCaballo]);
                     break;
                 case 6:
                     std::cout << "Caballos registrados:" << std::endl;
@@ -482,19 +518,27 @@ void menu() {
                     std::cin >> n_opcion;
                     std::cin.ignore();
                     if(n_opcion == 1)
-                        genealogiaDescendenteSexo(&caballos[posicionCaballo], 0, "M");
-                    else{
-                        genealogiaDescendenteSexo(&caballos[posicionCaballo],0,"F");
+                        mostrarDescendientesSexo(&caballos[posicionCaballo],"M");
+                    else {
+                        mostrarDescendientesSexo(&caballos[posicionCaballo],"F");
                     }
                     break;
 
                 case 7:
-                  
-                  
+                    determinarCruce(caballos);
                     break;
+
                 case 8:
-                    
+                    mismoNombre(caballos);
+                    break;
                 case 9:
+                    mismoHaras(caballos);
+                    break;
+                case 10:
+                    caballos.clear();
+                    break;
+
+                case 11:
                     std::cout << "Saliendo del menu..." << std::endl;
                     guardarCaballos(caballos);
                     break;
@@ -502,19 +546,15 @@ void menu() {
                 default:
                     std::cout << "Opcion invalida. Por favor, ingrese una opcion valida." << std::endl;
                     break;
-                
             }
-
-        }else{
-            if(opcion == 1){
-                caballo=agregar_ejemplar();
-                primera_iteracion=false;
-                caballos.push_back(caballo);
-            }else{
-                std::cout<<"Primero debe registrar caballo"<<std::endl;
+        } else {
+            if (opcion == 1) {
+                primera_iteracion = false;
+                caballos.push_back(agregar_ejemplar());
+            } else {
+                std::cout << "Primero debe registrar un caballo" << std::endl;
             }
         }
-       
     } while (opcion != 9);
 }
 
